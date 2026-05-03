@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getSiteContent } from './content/editableContent';
+import { getInitialSiteContent, loadSiteContent } from './content/editableContent';
 
 const navLinks = [
   ['Offering', '#services'],
@@ -327,10 +327,10 @@ function ApproachIcon({ type }: { type: ApproachIconName }) {
 }
 
 function App() {
-  const siteContent = useMemo(() => getSiteContent(), []);
-  const classes = siteContent.classes;
-  const partnerGyms = siteContent.partnerGyms;
-  const trainers = siteContent.trainers;
+  const initialContent = useMemo(() => getInitialSiteContent(), []);
+  const [classes, setClasses] = useState(initialContent.classes);
+  const [partnerGyms, setPartnerGyms] = useState(initialContent.partnerGyms);
+  const [trainers, setTrainers] = useState(initialContent.trainers);
 
   const [activeExperience, setActiveExperience] = useState<(typeof experiences)[number]['id']>(
     experiences[0].id,
@@ -412,6 +412,26 @@ function App() {
     }, 5200);
 
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      const loaded = await loadSiteContent();
+      if (!active) {
+        return;
+      }
+
+      setClasses(loaded.classes);
+      setPartnerGyms(loaded.partnerGyms);
+      setTrainers(loaded.trainers);
+    };
+
+    void run();
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (

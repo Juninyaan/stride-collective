@@ -1,7 +1,11 @@
 // Edit this file to update classes, trainers, and partner gyms without touching the main app code.
 // After edits, commit and push to GitHub. Vercel will auto-deploy the updates.
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
 
 const SITE_CONTENT_STORAGE_KEY = 'stride_site_content_v1';
+const FIRESTORE_COLLECTION = 'siteContent';
+const FIRESTORE_DOCUMENT = 'strideMain';
 
 export type EditableClass = {
   name: string;
@@ -206,4 +210,53 @@ export function clearSiteContentOverride(): void {
   }
 
   window.localStorage.removeItem(SITE_CONTENT_STORAGE_KEY);
+}
+
+export function getInitialSiteContent(): SiteContent {
+  return getSiteContent();
+}
+
+export async function loadSiteContent(): Promise<SiteContent> {
+  const localContent = getSiteContent();
+
+  if (!isFirebaseConfigured || !db) {
+    return localContent;
+  }
+
+  try {
+    const ref = doc(db, FIRESTORE_COLLECTION, FIRESTORE_DOCUMENT);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      return localContent;
+    }
+
+    const parsed = safeParseSiteContent(JSON.stringify(snap.data()));
+    if (!parsed) {
+      return localContent;
+    }
+
+    window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(parsed));
+    return parsed;
+  } catch {
+    return localContent;
+  }
+}
+
+export async function persistSiteContent(content: SiteContent): Promise<void> {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(content));
+
+  if (!isFirebaseConfigured || !db) {
+    return;
+  }
+
+  const ref = doc(db, FIRESTORE_COLLECTION, FIRESTORE_DOCUMENT);
+  await setDoc(ref, content, { merge: false });
+}
+
+export async function resetSiteContentToDefault(): Promise<void> {
+  await persistSiteContent(defaultSiteContent);
 }

@@ -2377,6 +2377,14 @@ li,
   cursor: pointer;
 }
 
+.admin-primary:disabled,
+.admin-secondary:disabled,
+.admin-danger:disabled,
+.admin-login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-primary,
 .admin-login-form button {
   background: linear-gradient(135deg, #33a7bb 0%, #49c2d5 100%);

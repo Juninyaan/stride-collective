@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  clearSiteContentOverride,
   defaultSiteContent,
-  getSiteContent,
-  saveSiteContent,
+  getInitialSiteContent,
+  loadSiteContent,
+  persistSiteContent,
+  resetSiteContentToDefault,
   type EditableClass,
   type EditablePartnerGym,
   type EditableTrainer,
@@ -20,7 +21,7 @@ function parseCommaList(value: string): string[] {
 }
 
 function AdminApp() {
-  const initialData = useMemo(() => getSiteContent(), []);
+  const initialData = useMemo(() => getInitialSiteContent(), []);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -28,6 +29,27 @@ function AdminApp() {
   const [partnerGyms, setPartnerGyms] = useState<EditablePartnerGym[]>(initialData.partnerGyms);
   const [trainers, setTrainers] = useState<EditableTrainer[]>(initialData.trainers);
   const [saveMessage, setSaveMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      const loaded = await loadSiteContent();
+      if (!active) {
+        return;
+      }
+
+      setClasses(loaded.classes);
+      setPartnerGyms(loaded.partnerGyms);
+      setTrainers(loaded.trainers);
+    };
+
+    void run();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,18 +63,36 @@ function AdminApp() {
     setPassword('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const payload: SiteContent = { classes, partnerGyms, trainers };
-    saveSiteContent(payload);
-    setSaveMessage('Saved. Public site now uses this updated content on this browser.');
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      await persistSiteContent(payload);
+      setSaveMessage('Saved. Changes are now shared through the database.');
+    } catch {
+      setSaveMessage('Save failed. Check Firebase config and Firestore rules.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    clearSiteContentOverride();
-    setClasses(defaultSiteContent.classes);
-    setPartnerGyms(defaultSiteContent.partnerGyms);
-    setTrainers(defaultSiteContent.trainers);
-    setSaveMessage('Reset to default content from editableContent.ts');
+  const handleReset = async () => {
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      await resetSiteContentToDefault();
+      setClasses(defaultSiteContent.classes);
+      setPartnerGyms(defaultSiteContent.partnerGyms);
+      setTrainers(defaultSiteContent.trainers);
+      setSaveMessage('Reset complete. Default content has been restored.');
+    } catch {
+      setSaveMessage('Reset failed. Check Firebase config and Firestore rules.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isLoggedIn) {
@@ -90,8 +130,8 @@ function AdminApp() {
           <p className="admin-note">URL: /admin. Save after changes to apply updates.</p>
         </div>
         <div className="admin-header-actions">
-          <button type="button" className="admin-secondary" onClick={handleReset}>Reset defaults</button>
-          <button type="button" className="admin-primary" onClick={handleSave}>Save changes</button>
+          <button type="button" className="admin-secondary" onClick={() => void handleReset()} disabled={isSaving}>Reset defaults</button>
+          <button type="button" className="admin-primary" onClick={() => void handleSave()} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save changes'}</button>
           <button
             type="button"
             className="admin-secondary"
