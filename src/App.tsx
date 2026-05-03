@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { editableClasses, editablePartnerGyms, editableTrainers } from './content/editableContent';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getSiteContent } from './content/editableContent';
 
 const navLinks = [
   ['Offering', '#services'],
@@ -13,9 +13,6 @@ const navLinks = [
 
 const heroImage =
   'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=80';
-
-const classes = editableClasses;
-const partnerGyms = editablePartnerGyms;
 
 const services = [
   {
@@ -133,8 +130,6 @@ const skills = [
   { icon: 'accountability' as const, text: 'Lifestyle accountability and client retention support' },
   { icon: 'performance' as const, text: 'Personal training for performance and physique goals' },
 ];
-
-const trainers = editableTrainers;
 
 const stories = [
   {
@@ -332,6 +327,11 @@ function ApproachIcon({ type }: { type: ApproachIconName }) {
 }
 
 function App() {
+  const siteContent = useMemo(() => getSiteContent(), []);
+  const classes = siteContent.classes;
+  const partnerGyms = siteContent.partnerGyms;
+  const trainers = siteContent.trainers;
+
   const [activeExperience, setActiveExperience] = useState<(typeof experiences)[number]['id']>(
     experiences[0].id,
   );

@@ -1,6 +1,8 @@
 // Edit this file to update classes, trainers, and partner gyms without touching the main app code.
 // After edits, commit and push to GitHub. Vercel will auto-deploy the updates.
 
+const SITE_CONTENT_STORAGE_KEY = 'stride_site_content_v1';
+
 export type EditableClass = {
   name: string;
   type: string;
@@ -29,7 +31,13 @@ export type EditableTrainer = {
   photo: string;
 };
 
-export const editableClasses: EditableClass[] = [
+export type SiteContent = {
+  classes: EditableClass[];
+  partnerGyms: EditablePartnerGym[];
+  trainers: EditableTrainer[];
+};
+
+const defaultClasses: EditableClass[] = [
   {
     name: 'Sunrise Power HIIT',
     type: 'Group · Outdoor',
@@ -98,7 +106,7 @@ export const editableClasses: EditableClass[] = [
   },
 ];
 
-export const editablePartnerGyms: EditablePartnerGym[] = [
+const defaultPartnerGyms: EditablePartnerGym[] = [
   {
     name: 'Anytime Fitness Male',
     location: 'Male, Maldives',
@@ -117,7 +125,7 @@ export const editablePartnerGyms: EditablePartnerGym[] = [
   },
 ];
 
-export const editableTrainers: EditableTrainer[] = [
+const defaultTrainers: EditableTrainer[] = [
   {
     name: 'Ahmed Hassan',
     badge: 'Head Coach',
@@ -143,3 +151,59 @@ export const editableTrainers: EditableTrainer[] = [
     photo: 'https://images.unsplash.com/photo-1506241312078-07b6142b1160?auto=format&fit=crop&w=900&q=80',
   },
 ];
+
+export const defaultSiteContent: SiteContent = {
+  classes: defaultClasses,
+  partnerGyms: defaultPartnerGyms,
+  trainers: defaultTrainers,
+};
+
+export const editableClasses = defaultSiteContent.classes;
+export const editablePartnerGyms = defaultSiteContent.partnerGyms;
+export const editableTrainers = defaultSiteContent.trainers;
+
+function safeParseSiteContent(value: string): SiteContent | null {
+  try {
+    const parsed = JSON.parse(value) as Partial<SiteContent>;
+    if (!parsed || !Array.isArray(parsed.classes) || !Array.isArray(parsed.partnerGyms) || !Array.isArray(parsed.trainers)) {
+      return null;
+    }
+
+    return {
+      classes: parsed.classes as EditableClass[],
+      partnerGyms: parsed.partnerGyms as EditablePartnerGym[],
+      trainers: parsed.trainers as EditableTrainer[],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function getSiteContent(): SiteContent {
+  if (typeof window === 'undefined') {
+    return defaultSiteContent;
+  }
+
+  const raw = window.localStorage.getItem(SITE_CONTENT_STORAGE_KEY);
+  if (!raw) {
+    return defaultSiteContent;
+  }
+
+  return safeParseSiteContent(raw) ?? defaultSiteContent;
+}
+
+export function saveSiteContent(content: SiteContent): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(content));
+}
+
+export function clearSiteContentOverride(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(SITE_CONTENT_STORAGE_KEY);
+}
