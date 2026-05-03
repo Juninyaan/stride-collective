@@ -446,8 +446,7 @@ function App() {
         <div className="hero-overlay" />
         <nav className="topbar">
           <a className="brand" href="#top">
-            <span className="brand-mark">S</span>
-            <span className="brand-text">Stride Collective</span>
+            <img alt="Stride Collective" className="brand-logo" src="/stride-logo.svg" />
           </a>
           <div className="nav-links">
             {navLinks.map(([label, href]) => (
