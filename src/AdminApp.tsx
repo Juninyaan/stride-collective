@@ -12,6 +12,7 @@ import {
 } from './content/editableContent';
 
 const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'stride-admin-2026';
+const adminUsername = import.meta.env.VITE_ADMIN_USERNAME || 'strideadmin';
 
 function parseCommaList(value: string): string[] {
   return value
@@ -23,6 +24,7 @@ function parseCommaList(value: string): string[] {
 function AdminApp() {
   const initialData = useMemo(() => getInitialSiteContent(), []);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [classes, setClasses] = useState<EditableClass[]>(initialData.classes);
@@ -53,13 +55,14 @@ function AdminApp() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== adminPassword) {
-      setLoginError('Invalid password');
+    if (username.trim() !== adminUsername || password !== adminPassword) {
+      setLoginError('Invalid username or password');
       return;
     }
 
     setLoginError('');
     setIsLoggedIn(true);
+    setUsername('');
     setPassword('');
   };
 
@@ -103,6 +106,15 @@ function AdminApp() {
           <h1>Content Manager</h1>
           <p className="admin-note">Login to update classes, trainers, and partner gyms.</p>
           <form className="admin-login-form" onSubmit={handleLogin}>
+            <label htmlFor="admin-username">Username</label>
+            <input
+              id="admin-username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter admin username"
+              required
+            />
             <label htmlFor="admin-password">Password</label>
             <input
               id="admin-password"
@@ -115,7 +127,7 @@ function AdminApp() {
             {loginError && <p className="admin-error">{loginError}</p>}
             <button type="submit">Login</button>
           </form>
-          <p className="admin-note small">Set VITE_ADMIN_PASSWORD in environment for production.</p>
+          <p className="admin-note small">Set VITE_ADMIN_USERNAME and VITE_ADMIN_PASSWORD in environment for production.</p>
         </div>
       </div>
     );
