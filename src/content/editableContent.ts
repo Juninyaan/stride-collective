@@ -144,7 +144,7 @@ const defaultTrainers: EditableTrainer[] = [
     role: 'Lead Group Coach & Conditioning Expert',
     bio: 'Aminath brings 8 years of group fitness expertise and a Masters-level background in exercise science. She leads all group conditioning and metabolic sessions with energy, precision cueing, and an uncanny ability to scale intensity for 20 different fitness levels in one room.\n\nHer approach is science-backed but human - she understands why people quit and designs sessions that keep clients coming back. Aminath specializes in body composition transformation and building sustainable training habits.',
     focus: ['Group coaching', 'Body recomposition', 'Habit building'],
-    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
+    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
   },
   {
     name: 'Khalil Ibrahim',
@@ -152,7 +152,7 @@ const defaultTrainers: EditableTrainer[] = [
     role: 'Senior Personal Trainer & Movement Coach',
     bio: 'Khalil is the go-to for clients who want white-glove service and elite results. With 10 years of private coaching experience, he has worked with everyone from busy executives to athletes. He combines periodized strength training with mobility expertise - the result is clients who reach their physique goals while actually moving better.\n\nHe handles all private training delivery and is known for exceptional communication, detailed progress tracking, and the ability to make complex programming feel simple. If results matter more than excuses, Khalil is your coach.',
     focus: ['Personal training', 'Mobility & recovery', 'Physique transformation'],
-    photo: 'https://images.unsplash.com/photo-1506241312078-07b6142b1160?auto=format&fit=crop&w=900&q=80',
+    photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80',
   },
 ];
 
