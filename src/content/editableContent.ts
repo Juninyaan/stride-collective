@@ -6,6 +6,7 @@ import { db, isFirebaseConfigured } from '../lib/firebase';
 const SITE_CONTENT_STORAGE_KEY = 'stride_site_content_v1';
 const FIRESTORE_COLLECTION = 'siteContent';
 const FIRESTORE_DOCUMENT = 'strideMain';
+const LEGACY_NON_MALE_TRAINER_PHOTO_FRAGMENTS = ['photo-1494790108377-be9c29b29330'];
 
 export type EditableClass = {
   name: string;
@@ -183,6 +184,28 @@ function safeParseSiteContent(value: string): SiteContent | null {
   }
 }
 
+function normalizeSiteContent(content: SiteContent): SiteContent {
+  const normalizedTrainers = content.trainers.map((trainer, index) => {
+    const fallbackPhoto = defaultSiteContent.trainers[index]?.photo ?? defaultSiteContent.trainers[0].photo;
+    const photo = typeof trainer.photo === 'string' ? trainer.photo.trim() : '';
+    const usesLegacyNonMalePhoto = LEGACY_NON_MALE_TRAINER_PHOTO_FRAGMENTS.some((fragment) =>
+      photo.includes(fragment),
+    );
+
+    if (!photo || usesLegacyNonMalePhoto) {
+      return { ...trainer, photo: fallbackPhoto };
+    }
+
+    return trainer;
+  });
+
+  return {
+    classes: content.classes,
+    partnerGyms: content.partnerGyms,
+    trainers: normalizedTrainers,
+  };
+}
+
 export function getSiteContent(): SiteContent {
   if (typeof window === 'undefined') {
     return defaultSiteContent;
@@ -193,7 +216,8 @@ export function getSiteContent(): SiteContent {
     return defaultSiteContent;
   }
 
-  return safeParseSiteContent(raw) ?? defaultSiteContent;
+  const parsed = safeParseSiteContent(raw) ?? defaultSiteContent;
+  return normalizeSiteContent(parsed);
 }
 
 export function saveSiteContent(content: SiteContent): void {
@@ -235,8 +259,9 @@ export async function loadSiteContent(): Promise<SiteContent> {
       return localContent;
     }
 
-    window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(parsed));
-    return parsed;
+    const normalized = normalizeSiteContent(parsed);
+    window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
   } catch {
     return localContent;
   }
@@ -247,14 +272,15 @@ export async function persistSiteContent(content: SiteContent): Promise<void> {
     return;
   }
 
-  window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(content));
+  const normalized = normalizeSiteContent(content);
+  window.localStorage.setItem(SITE_CONTENT_STORAGE_KEY, JSON.stringify(normalized));
 
   if (!isFirebaseConfigured || !db) {
     return;
   }
 
   const ref = doc(db, FIRESTORE_COLLECTION, FIRESTORE_DOCUMENT);
-  await setDoc(ref, content, { merge: false });
+  await setDoc(ref, normalized, { merge: false });
 }
 
 export async function resetSiteContentToDefault(): Promise<void> {
